@@ -1,0 +1,17 @@
+/* src/styles/index.css */
+@import "tailwindcss";
+
+/* Si usas plugins oficiales, impórtalos también con @plugin */
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* Opcional: Configuración para Dark Mode basado en clases */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Estilos globales adicionales si los necesitas, aunque Tailwind minimiza esto */
+body {
+  font-family: 'Arial', sans-serif; /* Ejemplo, usa la fuente que quieras */
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Evita scroll horizontal */
+}
