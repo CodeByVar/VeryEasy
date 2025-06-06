@@ -1,15 +1,21 @@
 // src/pages/LoginPage.jsx
 import React, { useState } from 'react';
-import Button from '../components/ui/Button'; // Importa tu componente Button
-import Input from '../components/ui/Input';   // Importa tu componente Input
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebookF, faTwitter, faInstagram, faGithub } from '@fortawesome/free-brands-svg-icons';
+import backgroundImage from '/images/hero_bolivia.jpg';
 
 // Opcional: Instala Font Awesome para los iconos si no lo tienes:
 // npm install --save @fortawesome/fontawesome-svg-core @fortawesome/free-brands-svg-icons @fortawesome/react-fontawesome
 
 function LoginPage() {
-  const [isRegistering, setIsRegistering] = useState(false); // true para Registrarse, false para Iniciar Sesión
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [error, setError] = useState('');
 
   // Estados para el formulario de Login
   const [loginEmail, setLoginEmail] = useState('');
@@ -20,14 +26,23 @@ function LoginPage() {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
 
-  // Simulación de envío de formularios (aquí es donde integrarías Axios)
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    console.log('Intentando iniciar sesión con:', { email: loginEmail, password: loginPassword });
-    // Aquí llamarías a tu servicio de autenticación con Axios
-    // userService.login({ email: loginEmail, password: loginPassword })
-    //   .then(response => { /* ... manejar éxito ... */ })
-    //   .catch(error => { /* ... manejar error ... */ });
+    setError('');
+    try {
+      const success = await login({
+        username: loginEmail,  // El backend espera 'username' en lugar de 'email'
+        password: loginPassword
+      });
+      if (success) {
+        navigate('/admin');
+      } else {
+        setError('Credenciales inválidas'); 
+      }
+    } catch (err) {
+      setError('Error al inicio de sesión');
+      console.error('Error de inicio de sesión:', err);
+    }
   };
 
   const handleRegisterSubmit = (e) => {
@@ -40,58 +55,23 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center p-4">
+    <div className="min-h-screen  bg-[url('/images/hero_bolivia.jpg')] bg-cover bg-center flex items-center justify-center p-4 ">
+    <div className="absolute inset-0 bg-teal-500/80 rounded-inherit"></div>
+
+
+
       <div
         className={`
           relative w-full max-w-4xl h-[500px] bg-white rounded-2xl shadow-xl overflow-hidden
           flex transition-all duration-700 ease-in-out
         `}
       >
-        {/* Panel Izquierdo (¡Hola! / ¡Bienvenido!) */}
+        {/* Panel de Formularios (Login / Registrarse) */}
+        {/* Este panel se moverá a la derecha para revelar el de bienvenida cuando es isRegistering */}
         <div
           className={`
-            absolute top-0 left-0 h-full w-1/2 bg-gradient-to-br from-teal-500 to-green-600 text-white
-            flex flex-col items-center justify-center p-8 text-center rounded-l-2xl
-            transition-transform duration-700 ease-in-out z-20
-            ${isRegistering ? 'translate-x-full rounded-r-2xl' : 'translate-x-0 rounded-l-2xl'}
-          `}
-        >
-          {isRegistering ? (
-            <>
-              <h2 className="text-4xl font-bold mb-4">¡Bienvenido!</h2>
-              <p className="text-lg mb-6">
-                Ingrese sus datos personales para utilizar todas las funciones del sitio
-              </p>
-              <Button
-                onClick={() => setIsRegistering(false)}
-                variant="outline" // Utiliza tu variante outline si la definiste en Button.jsx
-                className="text-white border-white hover:bg-white hover:text-green-600"
-              >
-                Iniciar Sesión
-              </Button>
-            </>
-          ) : (
-            <>
-              <h2 className="text-4xl font-bold mb-4">¡Hola!</h2>
-              <p className="text-lg mb-6">
-                Regístrese con sus datos personales para utilizar todas las funciones del sitio
-              </p>
-              <Button
-                onClick={() => setIsRegistering(true)}
-                variant="outline"
-                className="text-white border-white hover:bg-white hover:text-green-600"
-              >
-                Registrarse
-              </Button>
-            </>
-          )}
-        </div>
-
-        {/* Formularios (Login / Registrarse) */}
-        <div
-          className={`
-            absolute top-0 h-full w-1/2 bg-white flex flex-col items-center justify-center p-8
-            transition-transform duration-700 ease-in-out z-10
+            absolute top-0 left-0 h-full w-1/2 flex flex-col items-center justify-center p-8
+            transition-transform duration-700 ease-in-out z-10 bg-white
             ${isRegistering ? 'translate-x-full' : 'translate-x-0'}
           `}
         >
@@ -142,6 +122,9 @@ function LoginPage() {
                   required
                 />
               </div>
+              {error && (
+                <div className="text-red-500 text-sm text-center mt-2">{error}</div>
+              )}
               <a href="#" className="text-sm text-blue-600 hover:underline block text-right">
                 ¿Olvidaste tu contraseña?
               </a>
@@ -215,6 +198,47 @@ function LoginPage() {
               </Button>
             </form>
           </div>
+        </div>
+
+        {/* Panel Derecho (¡Hola! / ¡Bienvenido!) */}
+        {/* Este panel se moverá a la izquierda para revelar el formulario cuando es isRegistering */}
+        <div
+          className={`
+           absolute top-0 right-0 h-full w-1/2 bg-gradient-to-br from-teal-500 to-green-800 text-white
+           flex flex-col items-center justify-center p-8 text-center
+           transition-transform duration-700 ease-in-out z-20
+            ${isRegistering ? 'translate-x-[-100%]' : 'translate-x-0'}
+          `}
+        >
+          {isRegistering ? (
+            <>
+              <h2 className="text-4xl font-bold mb-4">¡Bienvenido!</h2>
+              <p className="text-lg mb-6">
+                Ingrese sus datos personales para utilizar todas las funciones del sitio
+              </p>
+              <Button
+                onClick={() => setIsRegistering(false)}
+                variant="outline" // Utiliza tu variante outline si la definiste en Button.jsx
+                className="text-white border-white hover:bg-white hover:text-green-600"
+              >
+                Iniciar Sesión
+              </Button>
+            </>
+          ) : (
+            <>
+              <h2 className="text-4xl font-bold mb-4">¡Hola!</h2>
+              <p className="text-lg mb-6">
+                Regístrese con sus datos personales para utilizar todas las funciones del sitio
+              </p>
+              <Button
+                onClick={() => setIsRegistering(true)}
+                variant="outline"
+                className="text-white border-white hover:bg-white hover:text-green-600"
+              >
+                Registrarse
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

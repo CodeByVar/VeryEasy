@@ -1,0 +1,9 @@
+Principal: #007BFF (Azul vibrante)
+Secundario: #E0F2F7 (Azul muy claro)
+Éxito: #28A745 (Verde esmeralda)
+Texto: #343A40 (Gris casi negro)
+Fondo/Separación: #F8F9FA (Gris muy claro)
+Acento para Advertencia/Error: #FFC107 (Amarillo), #DC3545 (Rojo)
+
+necesitamos esto para poder correr bien el servidor de pyton
+uvicorn app.main:app --reload

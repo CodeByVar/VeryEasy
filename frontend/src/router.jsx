@@ -5,7 +5,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 // Importa tus componentes de página
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage'; // La crearemos en el siguiente paso 
-// import LoginPage from './pages/LoginPage'; // La crearemos en el siguiente paso
+import DashboardPage from './pages/DashboardPage';
+import Adminpage from './pages/Adminpage';
 
 // import DashboardPage from './pages/DashboardPage'; // Y esta después
 
@@ -23,8 +24,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    // Por ahora, un placeholder. Crearemos DashboardPage.jsx después.
-    element: <div>Página del Sistema/Dashboard (próximamente)</div>,
+    element: <DashboardPage />,
+  },
+  {
+    path: '/admin',
+    element: <Adminpage />,
   },
   // Opcional: Ruta para 404 Not Found
   {
