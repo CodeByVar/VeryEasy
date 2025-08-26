@@ -7,3 +7,41 @@ Acento para Advertencia/Error: #FFC107 (Amarillo), #DC3545 (Rojo)
 
 necesitamos esto para poder correr bien el servidor de pyton
 uvicorn app.main:app --reload
+# 2 Instalar dependencias (o instalar uvicorn si falta)
+pip install -r requirements.txt
+
+instalar siempre el FastAPI
+pip install fastapi "uvicorn[standard]"
+Instale sqlalchemy siempre antes de correro actualizarlo
+pip install "sqlalchemy[asyncio]"
+Instalar el psycopg2 para usar el postgres siempre 
+pip install psycopg2-binary
+instalar pydantic para la validacion del email
+pip install pydantic[email]
+Instalar passlib 
+pip install "passlib[bcrypt]"
+installar
+pip install "python-jose[jwt]"
+
+# Crear el entorno virtual
+python -m venv venv
+
+# Activar el entorno virtual (Linux/macOS)
+source venv/bin/activate
+
+# Activar el entorno virtual (Windows)
+.\venv\Scripts\activate
+
+# Instalar Uvicorn
+pip install uvicorn
+
+
+Pasos rápidos que suelen arreglar errores comunes
+Backend (Python/FastAPI), desde la raíz del proyecto:
+.\venv\Scripts\python.exe -m pip install --upgrade pip
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+.\venv\Scripts\python.exe app\main.py
+
+Frontend (React/Vite), desde frontend:
+npm install
+npm run dev
