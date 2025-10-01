@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../components/ui/Modal';
 import Pagination from '../components/ui/Pagination';
 import PasswordModal from '../components/ui/PasswordModal';
+import { ninoService } from '../services/ninoService';
 
 // --- Datos Mock actualizados y completos ---
 const mockNinos = [
@@ -32,7 +33,7 @@ const mockNinos = [
   { id: 'NIN-025', nombre: 'Miguel Ángel Torres', edad: 12, fechaNacimiento: '2012-06-20', genero: 'Masculino', departamento: 'Potosí', ciudad: 'Potosí', direccion: 'Av. Serrudo, Calle Linares, #357', telefono: '591-2-567123', email: 'miguel.torres@email.com', grupoSanguineo: 'A-', alergias: 'Ninguna', medicamentos: 'Ninguno', condicionesMedicas: 'Ninguna', nombrePadre: 'Carlos Torres', nombreMadre: 'Isabel Torres', telefonoPadre: '591-2-567124', telefonoMadre: '591-2-567125', estado: 'Activo', observaciones: 'Deportista destacado en múltiples disciplinas.', documentos: [{ nombre: 'Certificado_Nacimiento.pdf', tipo: 'PDF', url: '#' }, { nombre: 'Certificado_Deportivo.pdf', tipo: 'PDF', url: '#' }] }
 ];
 
-const uniqueEstados = [...new Set(mockNinos.map(n => n.estado))];
+// Los estados únicos se calcularán dinámicamente desde los datos de la API
 const NINOS_PER_PAGE = 6;
 
 // Datos para el formulario
@@ -51,8 +52,10 @@ const getStatusColor = (estado) => {
 };
 
 const calcularEdad = (fechaNacimiento) => {
+  if (!fechaNacimiento) return 0;
   const hoy = new Date();
   const nacimiento = new Date(fechaNacimiento);
+  if (isNaN(nacimiento.getTime())) return 0;
   let edad = hoy.getFullYear() - nacimiento.getFullYear();
   const mes = hoy.getMonth() - nacimiento.getMonth();
   if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
@@ -62,7 +65,7 @@ const calcularEdad = (fechaNacimiento) => {
 };
 
 const Ninos = () => {
-  const [ninos, setNinos] = useState(mockNinos);
+  const [ninos, setNinos] = useState([]);
   const [selectedNino, setSelectedNino] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [pendingNino, setPendingNino] = useState(null);
@@ -70,21 +73,50 @@ const Ninos = () => {
   const [activeStatusFilters, setActiveStatusFilters] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Función para cargar niños desde la API
+  const cargarNinos = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await ninoService.obtenerNinos();
+      setNinos(data);
+    } catch (err) {
+      console.error('Error al cargar niños:', err);
+      setError('Error al cargar los datos de niños');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar niños al montar el componente
+  useEffect(() => {
+    cargarNinos();
+  }, []);
 
   // Estado del formulario de crear niño
   const [formData, setFormData] = useState({
     nombre: '',
-    apellidos: '',
     fechaNacimiento: '',
+    genero: '',
     carnet: '',
     tipoSangre: '',
+    departamento: '',
+    ciudad: '',
+    direccion: '',
+    telefono: '',
+    email: '',
     encargado: '',
     telefonoEncargado: '',
-    direccion: '',
     colegio: '',
     grado: '',
     alergias: [],
     medicamentos: [],
+    condicionesMedicas: '',
+    nombrePadre: '',
+    nombreMadre: '',
     observaciones: '',
     estado: 'Activo'
   });
@@ -105,17 +137,24 @@ const Ninos = () => {
     setShowAddModal(false);
     setFormData({
       nombre: '',
-      apellidos: '',
       fechaNacimiento: '',
+      genero: '',
       carnet: '',
       tipoSangre: '',
+      departamento: '',
+      ciudad: '',
+      direccion: '',
+      telefono: '',
+      email: '',
       encargado: '',
       telefonoEncargado: '',
-      direccion: '',
       colegio: '',
       grado: '',
       alergias: [],
       medicamentos: [],
+      condicionesMedicas: '',
+      nombrePadre: '',
+      nombreMadre: '',
       observaciones: '',
       estado: 'Activo'
     });
@@ -156,30 +195,56 @@ const Ninos = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Generar ID único
-    const newId = `NIN-${String(ninos.length + 1).padStart(3, '0')}`;
-    
-    // Crear nuevo niño
-    const nuevoNino = {
-      ...formData,
-      id: newId,
-      edad: calcularEdad(formData.fechaNacimiento),
-      foto: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
-      permisosActivos: 0,
-      viajesRealizados: 0
-    };
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Preparar datos para la API
+      const datosNino = {
+        nombre: formData.nombre,
+        fecha_nacimiento: formData.fechaNacimiento,
+        genero: formData.genero,
+        carnet: formData.carnet,
+        tipo_sangre: formData.tipoSangre,
+        departamento: formData.departamento,
+        ciudad: formData.ciudad,
+        direccion: formData.direccion,
+        telefono: formData.telefono || null,
+        email: formData.email || null,
+        encargado: formData.encargado,
+        telefono_encargado: formData.telefonoEncargado,
+        colegio: formData.colegio,
+        grado: formData.grado,
+        alergias: formData.alergias.length > 0 ? formData.alergias.join(', ') : 'Ninguna',
+        medicamentos: formData.medicamentos.length > 0 ? formData.medicamentos.join(', ') : 'Ninguno',
+        condiciones_medicas: formData.condicionesMedicas || null,
+        nombre_padre: formData.nombrePadre || null,
+        nombre_madre: formData.nombreMadre || null,
+        observaciones: formData.observaciones || null,
+        estado: formData.estado
+      };
 
-    // Agregar a la lista
-    setNinos(prev => [nuevoNino, ...prev]);
-    
-    // Cerrar modal y limpiar formulario
-    closeAddModal();
-    
-    // Mostrar mensaje de éxito
-    alert('Niño agregado exitosamente');
+      // Crear niño usando la API
+      const nuevoNino = await ninoService.crearNino(datosNino);
+      
+      // Agregar a la lista local
+      setNinos(prev => [nuevoNino, ...prev]);
+      
+      // Cerrar modal y limpiar formulario
+      closeAddModal();
+      
+      // Mostrar mensaje de éxito
+      alert('Niño agregado exitosamente');
+      
+    } catch (err) {
+      console.error('Error al crear niño:', err);
+      setError('Error al crear el niño. Verifique que el carnet no esté duplicado.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetFilters = () => {
@@ -220,7 +285,7 @@ const Ninos = () => {
         </p>
         <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-700">
-            <strong>🔒 Protección de Privacidad:</strong> Las fotos e información sensible solo se muestran después de verificar su identidad.
+            <strong>Protección de Privacidad:</strong> Las fotos e información sensible solo se muestran después de verificar su identidad.
           </p>
         </div>
       </div>
@@ -240,7 +305,7 @@ const Ninos = () => {
         </div>
         <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4 flex-wrap">
           <span className="font-medium text-gray-600">Filtrar por estado:</span>
-          {uniqueEstados.map(estado => (
+          {[...new Set(ninos.map(n => n.estado))].map(estado => (
             <label key={estado} className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100">
               <input type="checkbox" checked={activeStatusFilters.includes(estado)} onChange={() => handleStatusFilterChange(estado)} className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
               <span className="text-sm font-medium text-gray-700">{estado}</span>
@@ -249,8 +314,41 @@ const Ninos = () => {
         </div>
       </div>
 
+      {/* Indicador de carga */}
+      {loading && (
+        <div className="flex justify-center items-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+          <span className="ml-3 text-gray-600">Cargando niños...</span>
+        </div>
+      )}
+
+      {/* Mensaje de error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex">
+            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={cargarNinos}
+                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                >
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentNinos.map(nino => (
+        {!loading && !error && currentNinos.map(nino => (
           <div key={nino.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 overflow-hidden">
             <div className="p-6">
               <div className="flex items-start gap-4 mb-4">
@@ -272,8 +370,8 @@ const Ninos = () => {
                     </span>
                   </div>
                   <p className="text-sm text-gray-500 mb-1">Carnet: {nino.carnet}</p>
-                  <p className="text-sm text-gray-500 mb-1">Edad: {calcularEdad(nino.fechaNacimiento)} años</p>
-                  <p className="text-sm text-gray-500">Tipo Sangre: {nino.tipoSangre}</p>
+                  <p className="text-sm text-gray-500 mb-1">Edad: {calcularEdad(nino.fecha_nacimiento)} años</p>
+                  <p className="text-sm text-gray-500">Tipo Sangre: {nino.tipo_sangre}</p>
                 </div>
               </div>
 
@@ -319,16 +417,16 @@ const Ninos = () => {
                 </button>
               </div>
 
-              {nino.alergias.length > 0 && (
+              {nino.alergias && nino.alergias !== 'Ninguna' && (
                 <div className="pt-3 border-t border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">Alergias:</p>
                   <div className="flex flex-wrap gap-1">
-                    {nino.alergias.map((alergia, index) => (
+                    {nino.alergias.split(', ').map((alergia, index) => (
                       <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
-                        {alergia}
+                        {alergia.trim()}
                       </span>
                     ))}
                   </div>
@@ -339,7 +437,7 @@ const Ninos = () => {
         ))}
       </div>
 
-      {currentNinos.length === 0 && <p className="text-center text-gray-500 py-10">No se encontraron niños con los filtros seleccionados.</p>}
+      {!loading && !error && currentNinos.length === 0 && <p className="text-center text-gray-500 py-10">No se encontraron niños con los filtros seleccionados.</p>}
 
       <Pagination itemsPerPage={NINOS_PER_PAGE} totalItems={ninosFiltrados.length} paginate={paginate} currentPage={currentPage} />
 
@@ -369,7 +467,6 @@ const Ninos = () => {
                     }}
                   />
                   <h3 className="text-xl font-bold text-gray-800">{selectedNino.nombre}</h3>
-                  <p className="text-gray-500">{selectedNino.apellidos}</p>
                   <span className={`inline-block mt-2 px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(selectedNino.estado)}`}>
                     {selectedNino.estado}
                   </span>
@@ -380,9 +477,9 @@ const Ninos = () => {
                     <h4 className="font-semibold text-blue-800 mb-2">Información Personal</h4>
                     <div className="space-y-2 text-sm">
                       <p><strong>Carnet:</strong> {selectedNino.carnet}</p>
-                      <p><strong>Fecha Nacimiento:</strong> {selectedNino.fechaNacimiento}</p>
-                      <p><strong>Edad:</strong> {calcularEdad(selectedNino.fechaNacimiento)} años</p>
-                      <p><strong>Tipo Sangre:</strong> {selectedNino.tipoSangre}</p>
+                      <p><strong>Fecha Nacimiento:</strong> {selectedNino.fecha_nacimiento}</p>
+                      <p><strong>Edad:</strong> {calcularEdad(selectedNino.fecha_nacimiento)} años</p>
+                      <p><strong>Tipo Sangre:</strong> {selectedNino.tipo_sangre}</p>
                     </div>
                   </div>
 
@@ -421,14 +518,14 @@ const Ninos = () => {
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm text-gray-500 mb-2">Alergias:</p>
-                      {selectedNino.alergias.length > 0 ? (
+                      {selectedNino.alergias && selectedNino.alergias !== 'Ninguna' ? (
                         <div className="flex flex-wrap gap-2">
-                          {selectedNino.alergias.map((alergia, index) => (
+                          {selectedNino.alergias.split(', ').map((alergia, index) => (
                             <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                               </svg>
-                              {alergia}
+                              {alergia.trim()}
                             </span>
                           ))}
                         </div>
@@ -438,23 +535,35 @@ const Ninos = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500 mb-2">Medicamentos:</p>
-                      {selectedNino.medicamentos.length > 0 ? (
+                      {selectedNino.medicamentos && selectedNino.medicamentos !== 'Ninguno' ? (
                         <div className="flex flex-wrap gap-2">
-                          {selectedNino.medicamentos.map((medicamento, index) => (
+                          {selectedNino.medicamentos.split(', ').map((medicamento, index) => (
                             <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                               </svg>
-                              {medicamento}
+                              {medicamento.trim()}
                             </span>
                           ))}
                         </div>
                       ) : (
                         <p className="text-sm text-gray-500">No requiere medicamentos</p>
-                      )}
-                    </div>
+                                          )}
+                  </div>
+                  <div>
+                    <label htmlFor="condicionesMedicas" className="block text-sm font-medium text-gray-700 mb-1">Condiciones Médicas</label>
+                    <textarea 
+                      id="condicionesMedicas" 
+                      name="condicionesMedicas" 
+                      value={formData.condicionesMedicas} 
+                      onChange={handleInputChange}
+                      rows="2"
+                      placeholder="Condiciones médicas especiales..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
                   </div>
                 </div>
+              </div>
 
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h4 className="font-semibold text-gray-800 mb-4">Estadísticas</h4>
@@ -493,24 +602,25 @@ const Ninos = () => {
                 <h3 className="text-lg font-semibold text-blue-800 mb-4">Información Personal</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                    <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
                     <input 
                       type="text" 
                       id="nombre" 
                       name="nombre" 
                       value={formData.nombre} 
                       onChange={handleInputChange}
+                      placeholder="Nombre y apellidos"
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     />
                   </div>
                   <div>
-                    <label htmlFor="apellidos" className="block text-sm font-medium text-gray-700 mb-1">Apellidos *</label>
+                    <label htmlFor="carnet" className="block text-sm font-medium text-gray-700 mb-1">Carnet de Identidad *</label>
                     <input 
                       type="text" 
-                      id="apellidos" 
-                      name="apellidos" 
-                      value={formData.apellidos} 
+                      id="carnet" 
+                      name="carnet" 
+                      value={formData.carnet} 
                       onChange={handleInputChange}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
@@ -541,6 +651,21 @@ const Ninos = () => {
                     />
                   </div>
                   <div>
+                    <label htmlFor="genero" className="block text-sm font-medium text-gray-700 mb-1">Género *</label>
+                    <select 
+                      id="genero" 
+                      name="genero" 
+                      value={formData.genero} 
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    >
+                      <option value="">Seleccionar género</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Femenino">Femenino</option>
+                    </select>
+                  </div>
+                  <div>
                     <label htmlFor="tipoSangre" className="block text-sm font-medium text-gray-700 mb-1">Tipo de Sangre *</label>
                     <select 
                       id="tipoSangre" 
@@ -555,6 +680,40 @@ const Ninos = () => {
                         <option key={tipo} value={tipo}>{tipo}</option>
                       ))}
                     </select>
+                  </div>
+                  <div>
+                    <label htmlFor="departamento" className="block text-sm font-medium text-gray-700 mb-1">Departamento *</label>
+                    <select 
+                      id="departamento" 
+                      name="departamento" 
+                      value={formData.departamento} 
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    >
+                      <option value="">Seleccionar departamento</option>
+                      <option value="La Paz">La Paz</option>
+                      <option value="Cochabamba">Cochabamba</option>
+                      <option value="Santa Cruz">Santa Cruz</option>
+                      <option value="Oruro">Oruro</option>
+                      <option value="Potosí">Potosí</option>
+                      <option value="Tarija">Tarija</option>
+                      <option value="Chuquisaca">Chuquisaca</option>
+                      <option value="Beni">Beni</option>
+                      <option value="Pando">Pando</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="ciudad" className="block text-sm font-medium text-gray-700 mb-1">Ciudad *</label>
+                    <input 
+                      type="text" 
+                      id="ciudad" 
+                      name="ciudad" 
+                      value={formData.ciudad} 
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
                   </div>
                 </div>
               </div>
@@ -591,6 +750,28 @@ const Ninos = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     />
                   </div>
+                  <div>
+                    <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input 
+                      type="text" 
+                      id="telefono" 
+                      name="telefono" 
+                      value={formData.telefono} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input 
+                      type="email" 
+                      id="email" 
+                      name="email" 
+                      value={formData.email} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
                   <div className="md:col-span-2">
                     <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-1">Dirección *</label>
                     <input 
@@ -600,6 +781,28 @@ const Ninos = () => {
                       value={formData.direccion} 
                       onChange={handleInputChange}
                       required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="nombrePadre" className="block text-sm font-medium text-gray-700 mb-1">Nombre del Padre</label>
+                    <input 
+                      type="text" 
+                      id="nombrePadre" 
+                      name="nombrePadre" 
+                      value={formData.nombrePadre} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="nombreMadre" className="block text-sm font-medium text-gray-700 mb-1">Nombre de la Madre</label>
+                    <input 
+                      type="text" 
+                      id="nombreMadre" 
+                      name="nombreMadre" 
+                      value={formData.nombreMadre} 
+                      onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     />
                   </div>
@@ -746,9 +949,10 @@ const Ninos = () => {
                 </button>
                 <button 
                   type="submit"
-                  className="px-6 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition"
+                  disabled={loading}
+                  className="px-6 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Agregar Niño
+                  {loading ? 'Agregando...' : 'Agregar Niño'}
                 </button>
               </div>
             </form>

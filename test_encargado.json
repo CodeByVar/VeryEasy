@@ -1,0 +1,19 @@
+{
+  "nombre": "Carlos",
+  "apellido": "Pérez García",
+  "ci": "1234567890",
+  "telefono": "591-2-123457",
+  "telefono_alternativo": "591-2-123458",
+  "direccion": "Av. 6 de Agosto, Calle 15, #123",
+  "correo": "carlos.perez@email.com",
+  "parentesco": "Padre",
+  "ocupacion": "Ingeniero",
+  "lugar_trabajo": "Empresa ABC",
+  "telefono_trabajo": "591-2-123459",
+  "estado": "Activo",
+  "observaciones": "Encargado responsable y puntual",
+  "es_contacto_emergencia": true
+}
+
+
+

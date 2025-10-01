@@ -12,6 +12,7 @@ import DashboardPage from './pages/DashboardPage';
 import Ninos from './pages/Ninos';
 import Encargados from './pages/Encargados';
 import PaginaPermisos from './pages/PaginaPermisos';
+import Permisos from './pages/Permisos';
 import Usuarios from './pages/Usuarios';
 import Ajustes from './pages/Ajustes';
 import Viajes from './pages/Viajes';
@@ -51,7 +52,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'permisos',
-        element: <PaginaPermisos />,
+        element: <Permisos />,
       },
       {
         path: 'permisos/crear',

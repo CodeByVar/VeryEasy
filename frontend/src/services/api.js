@@ -1,12 +1,13 @@
 import axios from 'axios';  
 import API_BASE_URL from '../config/api';
 
-const apiClient = axios.create({
+const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 // Opcional: Interceptores para añadir el token de autenticación
 // Si tu backend de FastAPI requiere tokens JWT en los headers de autorización,
 // puedes añadir un interceptor aquí.
@@ -39,5 +40,4 @@ api.interceptors.response.use(
   }
 );
 
-
-export default api;
+export { api };

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Modal from '../components/ui/Modal';
-import Pagination from '../components/ui/Pagination';
-
+import Pagination from '../components/ui/Pagination'
 
 // --- Datos Mock actualizados y completos ---
 const mockPermisos = [

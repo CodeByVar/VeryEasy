@@ -4,7 +4,8 @@ Secundario: #E0F2F7 (Azul muy claro)
 Texto: #343A40 (Gris casi negro)
 Fondo/Separación: #F8F9FA (Gris muy claro)
 Acento para Advertencia/Error: #FFC107 (Amarillo), #DC3545 (Rojo)
-
+para correr los 2
+cd frontend && npm run dev
 necesitamos esto para poder correr bien el servidor de pyton
 uvicorn app.main:app --reload
 # 2 Instalar dependencias (o instalar uvicorn si falta)

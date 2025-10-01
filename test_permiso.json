@@ -1,0 +1,18 @@
+{
+  "id_nino": 1,
+  "id_encargado": 1,
+  "tipo_permiso": "Salida Médica",
+  "destino": "Hospital Central",
+  "motivo": "Consulta médica de rutina",
+  "fecha_salida": "2025-01-10",
+  "hora_salida": "09:00",
+  "fecha_retorno": "2025-01-10",
+  "hora_retorno": "12:00",
+  "transporte": "Vehículo propio",
+  "acompanante": "María García",
+  "telefono_contacto": "591-2-123456",
+  "documentos_adjuntos": "Carnet de identidad, Tarjeta de vacunación"
+}
+
+
+

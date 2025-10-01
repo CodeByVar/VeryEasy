@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend API</title>
+</head>
+<body>
+    <h1>Test de Conexión Frontend - API</h1>
+    <div id="status"></div>
+    <div id="data"></div>
+    
+    <script>
+        async function testAPI() {
+            const statusDiv = document.getElementById('status');
+            const dataDiv = document.getElementById('data');
+            
+            try {
+                statusDiv.innerHTML = '🔄 Probando conexión con la API...';
+                
+                const response = await fetch('http://localhost:8000/ninos/');
+                const data = await response.json();
+                
+                statusDiv.innerHTML = '✅ Conexión exitosa con la API';
+                dataDiv.innerHTML = `
+                    <h2>Datos recibidos:</h2>
+                    <p>Total de niños: ${data.length}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Error de conexión: ' + error.message;
+                dataDiv.innerHTML = '';
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>
+
+
+
