@@ -46,3 +46,18 @@ Backend (Python/FastAPI), desde la raíz del proyecto:
 Frontend (React/Vite), desde frontend:
 npm install
 npm run dev
+
+------------TEST-------------------------------
+# Tests de autenticación
+python tests/run_tests.py test_auth
+
+# Tests de modelos
+python tests/run_tests.py test_models
+
+# Tests de endpoints
+python tests/run_tests.py test_api_endpoints
+
+# Todos los tests
+python tests/run_tests.py
+
+python tests/run_tests.py test_utils

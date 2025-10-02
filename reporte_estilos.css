@@ -1,0 +1,21 @@
+/* Cambia el color de fondo de la cabecera */
+.header {
+    background-color: #34495e; /* Un azul oscuro */
+    color: white;
+}
+
+/* Estilo para las filas de pruebas que pasaron */
+.result-row.passed {
+    background-color: #e6ffe6; /* Verde muy claro */
+}
+
+/* Estilo para las filas de pruebas que fallaron */
+.result-row.failed {
+    background-color: #ffe6e6; /* Rojo muy claro */
+    font-weight: bold;
+}
+
+/* Cambia la fuente de todo el cuerpo */
+body {
+    font-family: Arial, sans-serif;
+}
