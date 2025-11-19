@@ -1,31 +1,52 @@
 pipeline {
-    agent any // Ejecutar en cualquier nodo disponible
+    agent none
 
     stages {
-        // Etapa 1: Construcción
-        stage('Build') {
+        // --- ETAPA 1: PYTHON (Backend & Scripts) ---
+        stage('Test Python') {
+            agent {
+                docker { image 'python:3.9' }
+            }
             steps {
-                echo 'Construyendo el proyecto...'
-                // Aquí va tu comando real. Ej: 'npm install', 'mvn clean install', etc.
-                sh './build_script.sh' 
+                // No usamos dir() porque requirements.txt está en la raíz
+                echo '--- Instalando dependencias Python ---'
+                sh 'pip install -r requirements.txt'
+                
+                echo '--- Ejecutando Tests Python ---'
+                // Veo que tienes un archivo específico para correr tests
+                sh 'python run_tests_example.py' 
             }
         }
 
-        // Etapa 2: Pruebas
-        stage('Test') {
+        // --- ETAPA 2: NODE JS & FRONTEND ---
+        stage('Build & Test Node/Frontend') {
+            agent {
+                docker { image 'node:18' } 
+            }
             steps {
-                echo 'Ejecutando pruebas...'
-                // Aquí va tu comando de test. Ej: 'npm test', 'pytest'
-                sh './test_script.sh' 
+                echo '--- Instalando dependencias Node ---'
+                // Usa el package.json que está en tu raíz
+                sh 'npm install' 
+                
+                echo '--- Verificando estructura ---'
+                // Listamos para asegurar que Jenkins ve los archivos
+                sh 'ls -la'
+                
+                // Si tienes un script de test en tu package.json:
+                // sh 'npm test'
+                
+                // Si tu frontend se construye desde aquí (ej. React):
+                // sh 'npm run build'
             }
         }
-
-        // Etapa 3: Despliegue (Opcional por ahora)
-        stage('Deploy') {
-            steps {
-                echo 'Desplegando...'
-                // Comandos para subir a producción
-            }
+    }
+    
+    post {
+        always {
+            echo 'Proceso finalizado.'
+        }
+        failure {
+            echo 'Hubo un error. Revisa qué archivo falló.'
         }
     }
 }
