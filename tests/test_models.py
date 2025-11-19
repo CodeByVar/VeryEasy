@@ -1,6 +1,7 @@
 """
 Tests para modelos de datos
 """
+from datetime import date
 import unittest
 from datetime import date, datetime, timedelta
 
