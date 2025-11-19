@@ -1,45 +1,53 @@
 pipeline {
     agent any
-
-    environment {
-        PYTHONIOENCODING = 'utf-8'
-    }
+    environment { PYTHONIOENCODING = 'utf-8' }
 
     stages {
-        // --- ETAPA 1: PYTHON ---
-        stage('Test Python') {
+        stage('Instalar Dependencias') {
             steps {
-                echo '--- Instalando dependencias Python ---'
                 bat 'pip install -r requirements.txt'
-                
-                echo '--- Ejecutando Tests DIRECTAMENTE (Sin menú) ---'
-                // CAMBIO AQUÍ: En vez de llamar al menú, llamamos a pytest directo
-                // Esto buscará automáticamente todos los tests en tu carpeta
-                bat 'python -m pytest' 
             }
         }
 
-        // --- ETAPA 2: NODE JS & FRONTEND ---
-        stage('Build & Test Node/Frontend') {
+        // --- ETAPA 1: LO BÁSICO ---
+        stage('Test Utilidades') {
             steps {
-                echo '--- Instalando dependencias Node ---'
-                bat 'npm install' 
-                
-                echo '--- Verificando archivos ---'
-                bat 'dir'
+                echo 'Probando funciones básicas...'
+                // -v muestra más detalles, -s muestra los prints
+                bat 'python -m pytest tests/test_utils.py -v'
+            }
+        }
+
+        // --- ETAPA 2: BASE DE DATOS ---
+        stage('Test Modelos') {
+            steps {
+                echo 'Probando base de datos...'
+                // Aquí es donde fallaban las fechas
+                bat 'python -m pytest tests/test_models.py -v'
+            }
+        }
+
+        // --- ETAPA 3: SEGURIDAD ---
+        stage('Test Auth') {
+            steps {
+                echo 'Probando login y seguridad...'
+                // Aquí es donde fallaba bcrypt
+                bat 'python -m pytest tests/test_auth.py -v'
+            }
+        }
+
+        // --- ETAPA 4: API COMPLETA ---
+        stage('Test Endpoints') {
+            steps {
+                echo 'Probando rutas de la API...'
+                bat 'python -m pytest tests/test_api_endpoints.py -v'
             }
         }
     }
     
     post {
-        always {
-            echo 'Proceso finalizado.'
-        }
-        failure {
-            echo 'Algo falló. Revisa los logs.'
-        }
-        success {
-            echo '¡ÉXITO TOTAL! Todo salió VERDE.'
-        }
+        always { echo 'Ciclo de pruebas terminado.' }
+        failure { echo '❌ Algo falló. Revisa qué etapa se puso roja.' }
+        success { echo '✅ ¡Felicidades! Todo el sistema está perfecto.' }
     }
 }
