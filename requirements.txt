@@ -7,4 +7,5 @@ pydantic
 SQLAlchemy
 python-dotenv
 pytest
-httpx  
+httpx
+email-validator
