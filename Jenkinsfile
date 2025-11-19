@@ -1,16 +1,21 @@
 pipeline {
-    agent any // Usamos tu propia PC como agente
+    agent any
+
+    environment {
+        PYTHONIOENCODING = 'utf-8'
+    }
 
     stages {
         // --- ETAPA 1: PYTHON ---
         stage('Test Python') {
             steps {
                 echo '--- Instalando dependencias Python ---'
-                // Usamos 'bat' porque estás en Windows
                 bat 'pip install -r requirements.txt'
                 
-                echo '--- Ejecutando Tests Python ---'
-                bat 'python run_tests_example.py' 
+                echo '--- Ejecutando Tests DIRECTAMENTE (Sin menú) ---'
+                // CAMBIO AQUÍ: En vez de llamar al menú, llamamos a pytest directo
+                // Esto buscará automáticamente todos los tests en tu carpeta
+                bat 'python -m pytest' 
             }
         }
 
@@ -18,15 +23,10 @@ pipeline {
         stage('Build & Test Node/Frontend') {
             steps {
                 echo '--- Instalando dependencias Node ---'
-                // 'call' asegura que npm termine antes de seguir
                 bat 'npm install' 
                 
                 echo '--- Verificando archivos ---'
-                // 'dir' es el comando de windows para listar archivos (ls es de linux)
                 bat 'dir'
-                
-                // Si tuvieras tests de node:
-                // bat 'npm test'
             }
         }
     }
@@ -39,7 +39,7 @@ pipeline {
             echo 'Algo falló. Revisa los logs.'
         }
         success {
-            echo '¡Todo salió VERDE! Buen trabajo.'
+            echo '¡ÉXITO TOTAL! Todo salió VERDE.'
         }
     }
 }
