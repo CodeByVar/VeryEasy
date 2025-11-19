@@ -1,42 +1,32 @@
 pipeline {
-    agent none
+    agent any // Usamos tu propia PC como agente
 
     stages {
-        // --- ETAPA 1: PYTHON (Backend & Scripts) ---
+        // --- ETAPA 1: PYTHON ---
         stage('Test Python') {
-            agent {
-                docker { image 'python:3.9' }
-            }
             steps {
-                // No usamos dir() porque requirements.txt está en la raíz
                 echo '--- Instalando dependencias Python ---'
-                sh 'pip install -r requirements.txt'
+                // Usamos 'bat' porque estás en Windows
+                bat 'pip install -r requirements.txt'
                 
                 echo '--- Ejecutando Tests Python ---'
-                // Veo que tienes un archivo específico para correr tests
-                sh 'python run_tests_example.py' 
+                bat 'python run_tests_example.py' 
             }
         }
 
         // --- ETAPA 2: NODE JS & FRONTEND ---
         stage('Build & Test Node/Frontend') {
-            agent {
-                docker { image 'node:18' } 
-            }
             steps {
                 echo '--- Instalando dependencias Node ---'
-                // Usa el package.json que está en tu raíz
-                sh 'npm install' 
+                // 'call' asegura que npm termine antes de seguir
+                bat 'npm install' 
                 
-                echo '--- Verificando estructura ---'
-                // Listamos para asegurar que Jenkins ve los archivos
-                sh 'ls -la'
+                echo '--- Verificando archivos ---'
+                // 'dir' es el comando de windows para listar archivos (ls es de linux)
+                bat 'dir'
                 
-                // Si tienes un script de test en tu package.json:
-                // sh 'npm test'
-                
-                // Si tu frontend se construye desde aquí (ej. React):
-                // sh 'npm run build'
+                // Si tuvieras tests de node:
+                // bat 'npm test'
             }
         }
     }
@@ -46,7 +36,10 @@ pipeline {
             echo 'Proceso finalizado.'
         }
         failure {
-            echo 'Hubo un error. Revisa qué archivo falló.'
+            echo 'Algo falló. Revisa los logs.'
+        }
+        success {
+            echo '¡Todo salió VERDE! Buen trabajo.'
         }
     }
 }
